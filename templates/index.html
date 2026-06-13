@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>♟ Chess Analyzer Pro — Foundry IQ Dashboard</title>
+  
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  
+  <!-- Chessboard.js CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css" />
+  
+  <style>
+    :root {
+      --bg-dark: #0a0a0c;
+      --bg-surface: #141417;
+      --bg-surface-elevated: #1c1c21;
+      --border: #28282e;
+      --accent: #d4af37; /* Gold */
+      --accent-dim: #8a7030;
+      --text-primary: #ffffff;
+      --text-secondary: #94949e;
+      --text-muted: #62626d;
+      --blunder: #ff4d4d;
+      --excellent: #2ecc71;
+      --check: #f1c40f;
+      --sans: 'Inter', sans-serif;
+      --mono: 'IBM Plex Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-primary);
+      font-family: var(--sans);
+      height: 100vh;
+      overflow: hidden; /* App-like feel */
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Scrollbar Styling */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+    /* Header */
+    header {
+      height: 64px;
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      background: var(--bg-surface);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo span { font-size: 24px; }
+    .logo h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.5px; }
+
+    .status-badge {
+      font-family: var(--mono);
+      font-size: 11px;
+      background: rgba(212, 175, 55, 0.1);
+      border: 1px solid var(--accent-dim);
+      color: var(--accent);
+      padding: 4px 10px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pulse {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
+      animation: pulse-kf 2s infinite;
+    }
+    @keyframes pulse-kf { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+
+    /* Main Dashboard Grid */
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 320px 1fr 380px;
+      gap: 1px;
+      background: var(--border); /* Borders via grid gap */
+      overflow: hidden;
+    }
+
+    section { background: var(--bg-dark); display: flex; flex-direction: column; overflow: hidden; }
+
+    .pane-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .pane-header h2 { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); }
+
+    .pane-content { flex: 1; padding: 20px; overflow-y: auto; }
+
+    /* Column 1: Input & Stats */
+    .input-pane { background: var(--bg-surface); }
+    
+    .pgn-input {
+      width: 100%;
+      height: 180px;
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 12px;
+      resize: none;
+      outline: none;
+      margin-bottom: 12px;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--sans);
+      font-size: 14px;
+      transition: all 0.2s;
+      border: none;
+    }
+
+    .btn-primary { background: var(--accent); color: var(--bg-dark); }
+    .btn-primary:hover { background: #e5c150; }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .stats-card {
+      background: var(--bg-surface-elevated);
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 24px;
+    }
+
+    .stat-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; }
+    .stat-label { color: var(--text-secondary); }
+    .stat-val { font-family: var(--mono); color: var(--accent); }
+
+    /* Column 2: The Board */
+    .board-pane {
+      background: var(--bg-dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+    }
+
+    #board { width: 100%; max-width: 600px; aspect-ratio: 1; }
+    
+    /* Chessboard override for dark mode */
+    .board-b72b1 { border: 2px solid var(--border); border-radius: 4px; overflow: hidden; }
+    .white-1e1d7 { background-color: #3b3b41 !important; color: #7b7b85 !important; }
+    .black-3c85d { background-color: #242429 !important; color: #4a4a52 !important; }
+
+    /* Column 3: Coaching & Timeline */
+    .analysis-pane { background: var(--bg-surface); }
+
+    .verdict-box {
+      background: rgba(212, 175, 55, 0.05);
+      border-left: 3px solid var(--accent);
+      padding: 16px;
+      margin-bottom: 20px;
+      border-radius: 0 4px 4px 0;
+    }
+
+    .verdict-box h3 { font-size: 11px; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
+    .verdict-text { font-style: italic; font-size: 14px; line-height: 1.5; color: var(--text-primary); }
+
+    .coaching-full { font-size: 13px; line-height: 1.7; color: var(--text-secondary); margin-bottom: 24px; }
+
+    /* Timeline */
+    .timeline { display: flex; flex-direction: column; gap: 8px; }
+    
+    .timeline-item {
+      background: var(--bg-surface-elevated);
+      border-radius: 6px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .timeline-item:hover { border-color: var(--text-muted); }
+    .timeline-item.active { border-color: var(--accent); background: #25252b; }
+
+    .move-num { font-family: var(--mono); font-size: 11px; color: var(--text-muted); width: 24px; margin-top: 2px; }
+    
+    .move-content { flex: 1; }
+    .move-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+    .move-san { font-family: var(--mono); font-weight: 700; font-size: 14px; color: var(--text-primary); }
+    
+    .badge {
+      font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 3px; font-family: var(--mono);
+    }
+    .badge-blunder { background: var(--blunder); color: white; }
+    .badge-check { background: var(--check); color: black; }
+    .badge-excellent { background: var(--excellent); color: black; }
+
+    .move-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.4; }
+
+    /* Utility */
+    .hidden { display: none !important; }
+    .loader { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); font-size: 14px; flex-direction: column; gap: 12px; }
+    .spinner { width: 24px; height: 24px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 1200px) {
+      main { grid-template-columns: 300px 1fr; }
+      .analysis-pane { grid-column: 1 / -1; height: 400px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <span>♟</span>
+    <h1>Chess Analyzer Pro</h1>
+  </div>
+  <div class="status-badge">
+    <div class="pulse"></div>
+    FOUNDRY IQ · AGENT ACTIVE
+  </div>
+</header>
+
+<main>
+  <!-- Left Sidebar: Controls -->
+  <section class="input-pane">
+    <div class="pane-header">
+      <h2>Game Input</h2>
+    </div>
+    <div class="pane-content">
+      <textarea id="pgn-input" class="pgn-input" placeholder="Paste PGN text here..."></textarea>
+      <button class="btn btn-primary" id="analyze-btn" onclick="analyzeGame()">Analyze PGN</button>
+      
+      <div id="stats-container" class="hidden">
+        <div class="stats-card">
+          <div class="stat-row">
+            <span class="stat-label">Opening</span>
+            <span class="stat-val" id="stat-opening">—</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Total Moves</span>
+            <span class="stat-val" id="stat-moves">0</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Blunders</span>
+            <span class="stat-val" style="color: var(--blunder)" id="stat-blunders">0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Center: Chessboard -->
+  <section class="board-pane">
+    <div id="board"></div>
+  </section>
+
+  <!-- Right Sidebar: Analysis & Timeline -->
+  <section class="analysis-pane">
+    <div class="pane-header">
+      <h2>Grandmaster's Insight</h2>
+    </div>
+    <div class="pane-content">
+      
+      <div id="analysis-empty" class="loader">
+        <div style="font-size: 32px; opacity: 0.5;">♟</div>
+        No analysis loaded
+      </div>
+
+      <div id="analysis-loading" class="loader hidden">
+        <div class="spinner"></div>
+        Consulting Anatoly...
+      </div>
+
+      <div id="analysis-results" class="hidden">
+        <div class="verdict-box">
+          <h3>The Verdict</h3>
+          <p class="verdict-text" id="verdict-text"></p>
+        </div>
+        
+        <div class="coaching-full" id="coaching-text"></div>
+
+        <div class="pane-header" style="padding: 0 0 12px 0; margin-bottom: 12px;">
+          <h2>Timeline</h2>
+        </div>
+        <div class="timeline" id="timeline">
+          <!-- Timeline items injected here -->
+        </div>
+      </div>
+
+    </div>
+  </section>
+</main>
+
+<!-- Scripts -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+<script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+
+<script>
+  let board = null;
+  let game = new Chess();
+  let currentAnalysis = null;
+
+  function initBoard() {
+    const config = {
+      position: 'start',
+      draggable: false,
+      pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
+    };
+    board = ChessBoard('board', config);
+  }
+
+  $(document).ready(initBoard);
+
+  async function analyzeGame() {
+    const pgn = $('#pgn-input').val().trim();
+    if (!pgn) { alert('Paste a PGN first.'); return; }
+
+    // UI States
+    $('#analyze-btn').prop('disabled', true).text('Analyzing...');
+    $('#analysis-empty').addClass('hidden');
+    $('#analysis-loading').removeClass('hidden');
+    $('#analysis-results').addClass('hidden');
+    $('#stats-container').addClass('hidden');
+
+    try {
+      const response = await fetch('/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pgn })
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed');
+
+      currentAnalysis = data;
+      renderAnalysis(data);
+
+    } catch (err) {
+      alert('Error: ' + err.message);
+      $('#analysis-empty').removeClass('hidden');
+    } finally {
+      $('#analyze-btn').prop('disabled', false).text('Analyze PGN');
+      $('#analysis-loading').addClass('hidden');
+    }
+  }
+
+  function renderAnalysis(data) {
+    // Stats
+    $('#stat-opening').text(data.opening);
+    $('#stat-moves').text(data.total_moves);
+    $('#stat-blunders').text(data.blunders);
+    $('#stats-container').removeClass('hidden');
+
+    // Verdict
+    $('#verdict-text').text(data.verdict || "Anatoly is speechless.");
+    $('#coaching-text').text(data.coaching || "");
+
+    // Timeline
+    const $timeline = $('#timeline');
+    $timeline.empty();
+
+    // Reset board to start
+    game = new Chess();
+    game.load_pgn($('#pgn-input').val());
+    const moves = game.history();
+    const fenHistory = [];
+    const tempGame = new Chess();
+    
+    fenHistory.push('start');
+    moves.forEach(m => {
+      tempGame.move(m);
+      fenHistory.push(tempGame.fen());
+    });
+
+    data.moves.forEach((move, idx) => {
+      const isCritical = move.alerts.length > 0;
+      const $item = $(`
+        <div class="timeline-item ${isCritical ? 'active' : ''}" onclick="jumpToMove(${idx + 1}, '${fenHistory[idx + 1]}')">
+          <div class="move-num">${move.move_index}.</div>
+          <div class="move-content">
+            <div class="move-header">
+              <span class="move-san">${move.move_color === 'White' ? '♔' : '♚'} ${move.san}</span>
+              <div class="badges">
+                ${move.alerts.map(a => `<span class="badge badge-${a.toLowerCase()}">${a}</span>`).join('')}
+              </div>
+            </div>
+            ${move.comment ? `<div class="move-desc">${move.comment}</div>` : ''}
+          </div>
+        </div>
+      `);
+      $timeline.append($item);
+    });
+
+    $('#analysis-results').removeClass('hidden');
+    board.position('start');
+  }
+
+  function jumpToMove(idx, fen) {
+    board.position(fen);
+    $('.timeline-item').removeClass('active');
+    $(`.timeline-item:nth-child(${idx})`).addClass('active');
+  }
+</script>
+
+</body>
+</html>
