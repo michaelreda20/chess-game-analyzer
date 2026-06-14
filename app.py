@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 from chess_engine import ChessEngine
 from foundry_iq import FoundryIQ
-from coach import GeminiCoach
+from coach import AnatolyCoach
 import os
 
 app = Flask(__name__)
@@ -9,7 +9,7 @@ app = Flask(__name__)
 # Initialize components
 engine = ChessEngine()
 foundry = FoundryIQ()
-coach = GeminiCoach()
+coach = AnatolyCoach()
 
 @app.route('/')
 def index():

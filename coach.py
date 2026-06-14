@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-class GeminiCoach:
+class AnatolyCoach:
     def __init__(self):
         # Target Alibaba Cloud Model Studio using the openai Python library
         api_key = os.getenv("DASHSCOPE_API_KEY")
