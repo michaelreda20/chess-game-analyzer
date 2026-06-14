@@ -37,8 +37,8 @@ def analyze():
     # 3. Gemini Coaching
     base_prompt = (
         f"Review this chess game where {analysis['white']} played as White and {analysis['black']} as Black. "
-        f"The opening was {analysis['opening']}. There were {analysis['blunders']} blunders detected. "
-        "Provide constructive feedback."
+        f"The opening was {analysis['opening']}. "
+        "Analyze the full move timeline and provide constructive feedback."
     )
     
     grounded_prompt = foundry.get_grounded_prompt(base_prompt, context_chunks)

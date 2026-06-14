@@ -3,30 +3,31 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>♟ Chess Analyzer Pro — Foundry IQ Dashboard</title>
+  <title>♟ The Soviet Grandmaster's Training Lounge</title>
   
   <!-- Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
   
   <!-- Chessboard.js CSS -->
   <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css" />
   
   <style>
     :root {
-      --bg-dark: #0a0a0c;
-      --bg-surface: #141417;
-      --bg-surface-elevated: #1c1c21;
-      --border: #28282e;
-      --accent: #d4af37; /* Gold */
-      --accent-dim: #8a7030;
-      --text-primary: #ffffff;
-      --text-secondary: #94949e;
-      --text-muted: #62626d;
-      --blunder: #ff4d4d;
-      --excellent: #2ecc71;
-      --check: #f1c40f;
+      --bg-dark: #0f0f12;
+      --bg-surface: #1a1a1f;
+      --bg-surface-elevated: #24242b;
+      --border: #35353d;
+      --accent: #9e2a2b; /* Muted Crimson */
+      --terminal-amber: #ffb000;
+      --terminal-green: #32cd32;
+      --text-primary: #e0e0e0;
+      --text-secondary: #a0a0a0;
+      --blunder: #9e2a2b;
+      --excellent: #2e5a2e;
+      --check: #b8860b;
       --sans: 'Inter', sans-serif;
       --mono: 'IBM Plex Mono', monospace;
+      --retro: 'Space Mono', monospace;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -36,319 +37,329 @@
       color: var(--text-primary);
       font-family: var(--sans);
       height: 100vh;
-      overflow: hidden; /* App-like feel */
+      overflow: hidden;
       display: flex;
       flex-direction: column;
+      border: 4px solid var(--bg-surface);
+      position: relative;
     }
 
-    /* Scrollbar Styling */
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
-    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+    /* Retro Terminal Scanline Effect */
+    body::before {
+      content: " ";
+      display: block;
+      position: absolute;
+      top: 0; left: 0; bottom: 0; right: 0;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+      z-index: 2000;
+      background-size: 100% 2px, 3px 100%;
+      pointer-events: none;
+    }
 
     /* Header */
     header {
-      height: 64px;
-      border-bottom: 1px solid var(--border);
-      padding: 0 24px;
+      height: 80px;
+      border-bottom: 2px solid var(--accent);
+      padding: 0 32px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       flex-shrink: 0;
       background: var(--bg-surface);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
     }
 
     .logo {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 16px;
     }
 
-    .logo span { font-size: 24px; }
-    .logo h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.5px; }
+    .logo span { font-size: 32px; color: var(--accent); filter: drop-shadow(0 0 5px var(--accent)); }
+    .logo h1 { 
+      font-family: var(--retro);
+      font-size: 20px; 
+      font-weight: 700; 
+      letter-spacing: 1px; 
+      color: var(--text-primary);
+      text-transform: uppercase;
+    }
 
     .status-badge {
       font-family: var(--mono);
-      font-size: 11px;
-      background: rgba(212, 175, 55, 0.1);
-      border: 1px solid var(--accent-dim);
+      font-size: 12px;
+      background: rgba(158, 42, 43, 0.1);
+      border: 1px solid var(--accent);
       color: var(--accent);
-      padding: 4px 10px;
-      border-radius: 4px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 0;
+      letter-spacing: 1px;
     }
-
-    .pulse {
-      width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
-      animation: pulse-kf 2s infinite;
-    }
-    @keyframes pulse-kf { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
 
     /* Main Dashboard Grid */
     main {
       flex: 1;
       display: grid;
-      grid-template-columns: 320px 1fr 380px;
-      gap: 1px;
-      background: var(--border); /* Borders via grid gap */
+      grid-template-columns: 340px 1fr 400px;
+      gap: 2px;
+      background: var(--border);
       overflow: hidden;
     }
 
-    section { background: var(--bg-dark); display: flex; flex-direction: column; overflow: hidden; }
+    section { background: var(--bg-dark); display: flex; flex-direction: column; overflow: hidden; position: relative; }
 
     .pane-header {
-      padding: 16px 20px;
+      padding: 12px 20px;
       border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      background: #15151a;
       flex-shrink: 0;
     }
 
-    .pane-header h2 { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); }
+    .pane-header h2 { 
+      font-family: var(--retro);
+      font-size: 12px; 
+      font-weight: 600; 
+      text-transform: uppercase; 
+      letter-spacing: 2px; 
+      color: var(--terminal-amber); 
+    }
 
     .pane-content { flex: 1; padding: 20px; overflow-y: auto; }
 
-    /* Column 1: Input & Stats */
-    .input-pane { background: var(--bg-surface); }
-    
+    /* Intro Text */
+    .intro-text {
+      font-family: var(--retro);
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 24px;
+      border-left: 2px solid var(--accent);
+      padding-left: 16px;
+    }
+
+    .intro-text b { color: var(--accent); }
+
+    /* Column 1: Input */
     .pgn-input {
       width: 100%;
-      height: 180px;
-      background: var(--bg-dark);
+      height: 200px;
+      background: #000;
       border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text-primary);
+      color: var(--terminal-green);
       font-family: var(--mono);
-      font-size: 12px;
+      font-size: 13px;
       padding: 12px;
       resize: none;
       outline: none;
-      margin-bottom: 12px;
+      margin-bottom: 16px;
+      box-shadow: inset 0 0 10px rgba(0, 255, 0, 0.1);
     }
 
     .btn {
       width: 100%;
-      padding: 12px;
-      border-radius: 6px;
-      font-weight: 600;
+      padding: 14px;
+      border-radius: 0;
+      font-weight: 700;
       cursor: pointer;
-      font-family: var(--sans);
-      font-size: 14px;
+      font-family: var(--retro);
+      font-size: 13px;
       transition: all 0.2s;
-      border: none;
+      border: 2px solid var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
 
-    .btn-primary { background: var(--accent); color: var(--bg-dark); }
-    .btn-primary:hover { background: #e5c150; }
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-primary:hover { background: #7e2122; box-shadow: 0 0 15px var(--accent); }
     .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    .stats-card {
-      background: var(--bg-surface-elevated);
-      border-radius: 8px;
-      padding: 16px;
-      margin-top: 24px;
-    }
+    /* Column 2: Board - Verified Dimensions */
+    .board-pane { padding: 40px; display: block; overflow: auto; }
+    #board { width: 100%; max-width: 540px; margin: 0 auto; aspect-ratio: 1; display: block; }
+    .board-b72b1 { border: 4px solid var(--bg-surface-elevated); box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+    .white-1e1d7 { background-color: #4a4a52 !important; color: #888 !important; }
+    .black-3c85d { background-color: #2a2a2f !important; color: #555 !important; }
 
-    .stat-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; }
-    .stat-label { color: var(--text-secondary); }
-    .stat-val { font-family: var(--mono); color: var(--accent); }
-
-    /* Column 2: The Board */
-    .board-pane {
-      background: var(--bg-dark);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 40px;
-    }
-
-    #board { width: 100%; max-width: 600px; aspect-ratio: 1; }
-    
-    /* Chessboard override for dark mode */
-    .board-b72b1 { border: 2px solid var(--border); border-radius: 4px; overflow: hidden; }
-    .white-1e1d7 { background-color: #3b3b41 !important; color: #7b7b85 !important; }
-    .black-3c85d { background-color: #242429 !important; color: #4a4a52 !important; }
-
-    /* Column 3: Coaching & Timeline */
-    .analysis-pane { background: var(--bg-surface); }
-
+    /* Column 3: Analysis */
     .verdict-box {
-      background: rgba(212, 175, 55, 0.05);
-      border-left: 3px solid var(--accent);
+      background: #000;
+      border: 1px solid var(--accent);
       padding: 16px;
-      margin-bottom: 20px;
-      border-radius: 0 4px 4px 0;
+      margin-bottom: 24px;
+      position: relative;
     }
+    .verdict-box::before {
+      content: "OFFICIAL VERDICT";
+      position: absolute;
+      top: -8px; left: 10px;
+      background: var(--bg-dark);
+      padding: 0 6px;
+      font-family: var(--retro);
+      font-size: 10px;
+      color: var(--accent);
+    }
+    .verdict-text { font-family: var(--retro); font-size: 14px; color: var(--terminal-amber); line-height: 1.5; white-space: pre-wrap; }
 
-    .verdict-box h3 { font-size: 11px; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
-    .verdict-text { font-style: italic; font-size: 14px; line-height: 1.5; color: var(--text-primary); }
-
-    .coaching-full { font-size: 13px; line-height: 1.7; color: var(--text-secondary); margin-bottom: 24px; }
+    .coaching-full { 
+      font-family: var(--sans);
+      font-size: 13px; 
+      line-height: 1.8; 
+      color: var(--text-secondary); 
+      margin-bottom: 32px; 
+      white-space: pre-wrap;
+    }
 
     /* Timeline */
-    .timeline { display: flex; flex-direction: column; gap: 8px; }
-    
+    .timeline { display: flex; flex-direction: column; gap: 8px; min-height: 100px; }
     .timeline-item {
-      background: var(--bg-surface-elevated);
-      border-radius: 6px;
-      padding: 10px 12px;
+      background: #121216;
+      border: 1px solid var(--border);
+      border-radius: 0;
+      padding: 12px;
       display: flex;
-      align-items: flex-start;
-      gap: 12px;
+      gap: 16px;
       cursor: pointer;
-      border: 1px solid transparent;
       transition: all 0.2s;
     }
+    .timeline-item:hover { background: #1a1a20; border-color: var(--text-secondary); }
+    .timeline-item.active { border-color: var(--terminal-amber); background: #1c1c22; }
 
-    .timeline-item:hover { border-color: var(--text-muted); }
-    .timeline-item.active { border-color: var(--accent); background: #25252b; }
+    .move-num { font-family: var(--retro); font-size: 12px; color: var(--accent); width: 55px; font-weight: 700; flex-shrink: 0; }
+    .move-san { font-family: var(--retro); font-weight: 700; font-size: 15px; color: var(--terminal-green); }
+    .move-desc { font-family: var(--sans); font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
 
-    .move-num { font-family: var(--mono); font-size: 11px; color: var(--text-muted); width: 24px; margin-top: 2px; }
-    
-    .move-content { flex: 1; }
-    .move-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
-    .move-san { font-family: var(--mono); font-weight: 700; font-size: 14px; color: var(--text-primary); }
-    
     .badge {
-      font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 3px; font-family: var(--mono);
+      font-family: var(--retro);
+      font-size: 9px;
+      padding: 2px 6px;
+      font-weight: 700;
+      text-transform: uppercase;
     }
     .badge-blunder { background: var(--blunder); color: white; }
-    .badge-check { background: var(--check); color: black; }
-    .badge-excellent { background: var(--excellent); color: black; }
 
-    .move-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.4; }
-
-    /* Utility */
+    /* Loader */
+    .loader { font-family: var(--retro); color: var(--terminal-green); }
     .hidden { display: none !important; }
-    .loader { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); font-size: 14px; flex-direction: column; gap: 12px; }
-    .spinner { width: 24px; height: 24px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    @media (max-width: 1200px) {
-      main { grid-template-columns: 300px 1fr; }
-      .analysis-pane { grid-column: 1 / -1; height: 400px; }
-    }
   </style>
 </head>
 <body>
 
 <header>
   <div class="logo">
-    <span>♟</span>
-    <h1>Chess Analyzer Pro</h1>
+    <span>☭</span>
+    <h1>The Soviet Grandmaster's Training Lounge</h1>
   </div>
   <div class="status-badge">
-    <div class="pulse"></div>
-    FOUNDRY IQ · AGENT ACTIVE
+    SYSTEM STATUS: LOGIC SECURE
   </div>
 </header>
 
 <main>
-  <!-- Left Sidebar: Controls -->
   <section class="input-pane">
     <div class="pane-header">
-      <h2>Game Input</h2>
+      <h2>Transmission Input</h2>
     </div>
     <div class="pane-content">
-      <textarea id="pgn-input" class="pgn-input" placeholder="Paste PGN text here..."></textarea>
-      <button class="btn btn-primary" id="analyze-btn" onclick="analyzeGame()">Analyze PGN</button>
+      <div class="intro-text">
+        Welcome, Comrade. You enter the inner sanctum of the <b>Moscow Central Chess Club</b>. 
+        Submit your PGN logs for rigorous ideological and tactical review. 
+        Grandmaster Anatoly is waiting... <i>and he is rarely impressed.</i>
+      </div>
       
-      <div id="stats-container" class="hidden">
-        <div class="stats-card">
-          <div class="stat-row">
-            <span class="stat-label">Opening</span>
-            <span class="stat-val" id="stat-opening">—</span>
+      <textarea id="pgn-input" class="pgn-input" placeholder="INPUT PGN STRING..."></textarea>
+      <button class="btn btn-primary" id="analyze-btn" onclick="analyzeGame()">Submit for Review</button>
+      
+      <div id="stats-container" class="hidden" style="margin-top: 24px;">
+        <div style="font-family: var(--retro); font-size: 11px; color: var(--text-secondary); margin-bottom: 10px;">SECTOR STATISTICS:</div>
+        <div style="background: #000; border: 1px solid var(--border); padding: 16px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 12px;">
+            <span style="color: var(--text-secondary)">OPENING:</span>
+            <span id="stat-opening" style="color: var(--terminal-amber)">—</span>
           </div>
-          <div class="stat-row">
-            <span class="stat-label">Total Moves</span>
-            <span class="stat-val" id="stat-moves">0</span>
-          </div>
-          <div class="stat-row">
-            <span class="stat-label">Blunders</span>
-            <span class="stat-val" style="color: var(--blunder)" id="stat-blunders">0</span>
+          <div style="display: flex; justify-content: space-between; font-size: 12px;">
+            <span style="color: var(--text-secondary)">TOTAL MOVES:</span>
+            <span id="stat-blunders" style="color: var(--terminal-green)">0</span>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Center: Chessboard -->
   <section class="board-pane">
     <div id="board"></div>
   </section>
 
-  <!-- Right Sidebar: Analysis & Timeline -->
   <section class="analysis-pane">
     <div class="pane-header">
-      <h2>Grandmaster's Insight</h2>
+      <h2>Grandmaster's Evaluation</h2>
     </div>
     <div class="pane-content">
       
       <div id="analysis-empty" class="loader">
-        <div style="font-size: 32px; opacity: 0.5;">♟</div>
-        No analysis loaded
+        [ SYSTEM IDLE: WAITING FOR DATA ]
       </div>
 
       <div id="analysis-loading" class="loader hidden">
-        <div class="spinner"></div>
-        Consulting Anatoly...
+        [ ANALYZING STRUGGLE ON 64 SQUARES... ]
       </div>
 
       <div id="analysis-results" class="hidden">
         <div class="verdict-box">
-          <h3>The Verdict</h3>
           <p class="verdict-text" id="verdict-text"></p>
         </div>
         
         <div class="coaching-full" id="coaching-text"></div>
 
-        <div class="pane-header" style="padding: 0 0 12px 0; margin-bottom: 12px;">
-          <h2>Timeline</h2>
+        <div class="pane-header" style="padding: 0 0 12px 0; border: none; margin-bottom: 12px;">
+          <h2>Log Timeline</h2>
         </div>
-        <div class="timeline" id="timeline">
-          <!-- Timeline items injected here -->
-        </div>
+        <div class="timeline" id="timeline"></div>
       </div>
 
     </div>
   </section>
 </main>
-
-<!-- Scripts -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
-<script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
 
 <script>
   let board = null;
   let game = new Chess();
-  let currentAnalysis = null;
 
   function initBoard() {
-    const config = {
-      position: 'start',
-      draggable: false,
-      pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
-    };
-    board = ChessBoard('board', config);
+    try {
+      // Using a highly reliable, public CDN for standard chess piece assets
+      board = ChessBoard('board', {
+        position: 'start',
+        draggable: false,
+        pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
+      });
+      
+      // Force a resize calculation to make sure CSS triggers the render bounds immediately
+      $(window).resize(board.resize);
+    } catch (e) {
+      console.error("Board display initialization fault: ", e);
+    }
   }
 
-  $(document).ready(initBoard);
+  $(document).ready(function() {
+    initBoard();
+    
+    // Explicitly force a layout recalculation 200ms after load to guarantee the board displays
+    setTimeout(function() {
+      if (board) board.resize();
+    }, 200);
+  });
 
   async function analyzeGame() {
     const pgn = $('#pgn-input').val().trim();
-    if (!pgn) { alert('Paste a PGN first.'); return; }
+    if (!pgn) return;
 
-    // UI States
-    $('#analyze-btn').prop('disabled', true).text('Analyzing...');
+    $('#analyze-btn').prop('disabled', true).text('PROCESSING...');
     $('#analysis-empty').addClass('hidden');
     $('#analysis-loading').removeClass('hidden');
     $('#analysis-results').addClass('hidden');
-    $('#stats-container').addClass('hidden');
 
     try {
       const response = await fetch('/analyze', {
@@ -356,79 +367,91 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pgn })
       });
-
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Failed');
-
-      currentAnalysis = data;
       renderAnalysis(data);
-
     } catch (err) {
-      alert('Error: ' + err.message);
-      $('#analysis-empty').removeClass('hidden');
+      console.error(err);
+      $('#analysis-empty').text('[ ERROR: LINK SEVERED ]').removeClass('hidden');
     } finally {
-      $('#analyze-btn').prop('disabled', false).text('Analyze PGN');
+      $('#analyze-btn').prop('disabled', false).text('Submit for Review');
       $('#analysis-loading').addClass('hidden');
     }
   }
 
   function renderAnalysis(data) {
-    // Stats
-    $('#stat-opening').text(data.opening);
-    $('#stat-moves').text(data.total_moves);
-    $('#stat-blunders').text(data.blunders);
-    $('#stats-container').removeClass('hidden');
+    try {
+      $('#stat-opening').text(data.opening || 'Unknown Opening');
+      $('#stat-blunders').text(data.total_moves || '0');
+      $('#stats-container').removeClass('hidden');
+      $('#verdict-text').text(data.verdict || '');
+      $('#coaching-text').text(data.coaching || '');
 
-    // Verdict
-    $('#verdict-text').text(data.verdict || "Anatoly is speechless.");
-    $('#coaching-text').text(data.coaching || "");
+      const $timeline = $('#timeline').empty();
+      
+      let fenHistory = ['start'];
+      try {
+        let localGame = new Chess();
+        let pgnVal = $('#pgn-input').val();
+        if(localGame.load_pgn(pgnVal)) {
+          let movesList = localGame.history();
+          let tempBoard = new Chess();
+          movesList.forEach(m => { 
+            tempBoard.move(m); 
+            fenHistory.push(tempBoard.fen()); 
+          });
+        }
+      } catch(pgnErr) {
+        console.warn("PGN timeline synchronization lag:", pgnErr);
+      }
 
-    // Timeline
-    const $timeline = $('#timeline');
-    $timeline.empty();
+      if (data.moves && Array.isArray(data.moves)) {
+        data.moves.forEach((move, idx) => {
+          let badgeHtml = '';
+          if (move.is_capture) {
+            badgeHtml = `<span class="badge badge-blunder">CAPTURE</span>`;
+          }
 
-    // Reset board to start
-    game = new Chess();
-    game.load_pgn($('#pgn-input').val());
-    const moves = game.history();
-    const fenHistory = [];
-    const tempGame = new Chess();
-    
-    fenHistory.push('start');
-    moves.forEach(m => {
-      tempGame.move(m);
-      fenHistory.push(tempGame.fen());
-    });
+          const colorSymbol = move.move_color === 'White' ? 'W' : 'B';
+          const moveNum = move.move_number || Math.floor(idx / 2) + 1;
+          const moveLabel = `${moveNum}.${colorSymbol}`;
+          const currentFen = fenHistory[idx + 1] || 'start';
 
-    data.moves.forEach((move, idx) => {
-      const isCritical = move.alerts.length > 0;
-      const $item = $(`
-        <div class="timeline-item ${isCritical ? 'active' : ''}" onclick="jumpToMove(${idx + 1}, '${fenHistory[idx + 1]}')">
-          <div class="move-num">${move.move_index}.</div>
-          <div class="move-content">
-            <div class="move-header">
-              <span class="move-san">${move.move_color === 'White' ? '♔' : '♚'} ${move.san}</span>
-              <div class="badges">
-                ${move.alerts.map(a => `<span class="badge badge-${a.toLowerCase()}">${a}</span>`).join('')}
+          const $item = $(`
+            <div class="timeline-item ${move.is_capture ? 'active' : ''}" onclick="jump(${idx+1}, '${currentFen}')">
+              <div class="move-num">${moveLabel}</div>
+              <div style="flex:1">
+                <div style="display:flex; justify-content:space-between; align-items:center">
+                  <span class="move-san">${move.move_color === 'White' ? '♔' : '♚'} ${move.san || '—'}</span>
+                  ${badgeHtml}
+                </div>
+                <div class="move-desc">${move.is_capture ? 'Captured ' + (move.captured_piece || 'Piece') : 'Positional development.'}</div>
               </div>
             </div>
-            ${move.comment ? `<div class="move-desc">${move.comment}</div>` : ''}
-          </div>
-        </div>
-      `);
-      $timeline.append($item);
-    });
+          `);
+          $timeline.append($item);
+        });
+      } else {
+        $timeline.append('<div class="loader">[ SYSTEM WARNING: LOG TIMELINE TIMEOUT ]</div>');
+      }
 
-    $('#analysis-results').removeClass('hidden');
-    board.position('start');
+      $('#analysis-results').removeClass('hidden');
+      if (board) {
+        board.position('start');
+        board.resize();
+      }
+    } catch (renderError) {
+      console.error("Render display pipeline error:", renderError);
+      $('#analysis-empty').text('[ FAULT: ENGINE MATRIX MISALIGNED ]').removeClass('hidden');
+    }
   }
 
-  function jumpToMove(idx, fen) {
-    board.position(fen);
-    $('.timeline-item').removeClass('active');
-    $(`.timeline-item:nth-child(${idx})`).addClass('active');
+  function jump(idx, fen) {
+    if (board && fen) {
+      board.position(fen);
+      $('.timeline-item').removeClass('active');
+      $(`.timeline-item:nth-child(${idx})`).addClass('active');
+    }
   }
 </script>
-
-</body>
 </html>
+</html 
