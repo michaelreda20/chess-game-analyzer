@@ -62,7 +62,7 @@ Open **`http://127.0.0.1:5000`** in your browser.
 ---
 
 ## 📽️ Demo Video
-**[Click here to watch the Grandmaster Anatoly Demo Video](YOUR_YOUTUBE_OR_DRIVE_LINK_HERE)**
+**[Click here to watch the Grandmaster Anatoly Demo Video](https://youtu.be/Io7gTIgcSUA)**
 
 ---
 
