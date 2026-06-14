@@ -99,6 +99,12 @@ class ChessEngine:
             color = "White" if is_white_turn else "Black"
             san = board.san(move)
             
+            # Information before the move
+            from_square = move.from_square
+            to_square = move.to_square
+            piece_moved = board.piece_at(from_square)
+            piece_captured = board.piece_at(to_square)
+            
             # Execute the move
             board.push(move)
             
@@ -107,20 +113,42 @@ class ChessEngine:
             alerts = []
             comment = ""
             
-            # Detect hanging pieces for the side that just moved
-            for square in chess.SQUARES:
-                piece = board.piece_at(square)
-                if piece and piece.color == (not board.turn): # Side that just moved
-                    if board.is_attacked_by(board.turn, square):
-                        defenders = board.attackers(not board.turn, square)
-                        if not defenders:
-                            val = self.get_piece_value(piece)
-                            if val >= 3:
-                                is_blunder = True
-                                comment = f"Blunder: {color} left a {chess.piece_name(piece.piece_type)} hanging!"
-                                alerts.append("BLUNDER")
-                                blunders += 1
-                                break
+            # 1. Check if the piece moved was hung for free (without capturing something of equal/greater value)
+            if board.is_attacked_by(board.turn, to_square):
+                defenders = board.attackers(not board.turn, to_square)
+                if not defenders:
+                    val_moved = self.get_piece_value(piece_moved)
+                    val_captured = self.get_piece_value(piece_captured)
+                    
+                    # If it's a capture, it's only a blunder if we lose more than we gain
+                    if "x" in san:
+                        if val_moved > val_captured:
+                            is_blunder = True
+                            comment = f"Blunder: {color} traded a {chess.piece_name(piece_moved.piece_type)} for a {chess.piece_name(piece_captured.piece_type)} without compensation!"
+                    # If it wasn't a capture and it's hung
+                    elif val_moved >= 3:
+                        is_blunder = True
+                        comment = f"Blunder: {color} left a {chess.piece_name(piece_moved.piece_type)} hanging!"
+            
+            # 2. Check if the move left ANOTHER piece hanging (that wasn't the one that moved)
+            if not is_blunder:
+                for square in chess.SQUARES:
+                    if square == to_square: continue # Already checked the piece that moved
+                    
+                    piece = board.piece_at(square)
+                    if piece and piece.color == (not board.turn): # Side that just moved
+                        if board.is_attacked_by(board.turn, square):
+                            defenders = board.attackers(not board.turn, square)
+                            if not defenders:
+                                val = self.get_piece_value(piece)
+                                if val >= 3:
+                                    is_blunder = True
+                                    comment = f"Blunder: {color} left a {chess.piece_name(piece.piece_type)} hanging!"
+                                    break
+
+            if is_blunder:
+                alerts.append("BLUNDER")
+                blunders += 1
             
             if board.is_checkmate():
                 comment = f"Checkmate! {color} wins."
