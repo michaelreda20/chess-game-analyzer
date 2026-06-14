@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 from chess_engine import ChessEngine
 from foundry_iq import FoundryIQ
-from gemini_coach import GeminiCoach
+from coach import GeminiCoach
 import os
 
 app = Flask(__name__)
